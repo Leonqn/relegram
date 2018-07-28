@@ -21,8 +21,8 @@ pub struct BotClient {
 
 pub enum HttpClient {
     Default,
-    HyperOwned(Client<HttpsConnector<HttpConnector>, Body>),
-    HyperArc(Arc<Client<HttpsConnector<HttpConnector>, Body>>),
+    Owned(Client<HttpsConnector<HttpConnector>, Body>),
+    Arc(Arc<Client<HttpsConnector<HttpConnector>, Body>>),
 }
 
 impl BotClient {
@@ -33,10 +33,10 @@ impl BotClient {
                     let https = HttpsConnector::new(1).expect("TLS initialization failed");
                     Arc::new(Client::builder().build::<_, Body>(https))
                 }
-                HttpClient::HyperOwned(http_client) => {
+                HttpClient::Owned(http_client) => {
                     Arc::new(http_client)
                 }
-                HttpClient::HyperArc(http_client) => {
+                HttpClient::Arc(http_client) => {
                     http_client
                 }
             };
@@ -69,7 +69,7 @@ impl BotClient {
                 let response: TgResponse<TResult> = serde_json::from_slice(&body?)?;
                 match response {
                     TgResponse { ok: true, result: Some(res), .. } => Ok(res),
-                    TgResponse { ok: false, description: desc, error_code: Some(error_code), .. } => Err(""),
+                    TgResponse { ok: false, description: Some(desc), error_code: Some(error_code), .. } => Err(""),
                     _ => Err("")
                 }
             })
