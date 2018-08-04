@@ -10,7 +10,8 @@ use serde::Serialize;
 use serde::de::DeserializeOwned;
 use hyper::Request;
 use serde_json;
-use raw_responses::TgResponse;
+use responses::raw;
+use responses::Update;
 
 const BASE_API_URI: &'static str = "https://api.telegram.org/bot";
 
@@ -49,11 +50,12 @@ impl BotClient {
 
     pub fn get_updates(&self, request: GetUpdates) -> impl Future<Item=Vec<Update>, Error=Error> {
         self.send(request, "getUpdates")
+            .map(|x: Vec<raw::Update>| x.into_iter().map(From::from).collect())
     }
 
     fn send<TRequest, TResult>(&self, request: TRequest, method: &'static str) -> impl Future<Item=TResult, Error=Error>
         where TRequest: Serialize,
-              TResult: DeserializeOwned
+              TResult: DeserializeOwned,
     {
         let uri = format!("{}{}/{}", BASE_API_URI, self.token, method);
         let request =
@@ -66,11 +68,16 @@ impl BotClient {
         self.http_client.request(request)
             .and_then(|r| r.into_body().concat2())
             .then(|body| {
-                let response: TgResponse<TResult> = serde_json::from_slice(&body?)?;
+                let response: raw::TgResponse<TResult> = serde_json::from_slice(&body?)?;
                 match response {
-                    TgResponse { ok: true, result: Some(res), .. } => Ok(res),
-                    TgResponse { ok: false, description: Some(desc), error_code: Some(error_code), .. } => Err(""),
-                    _ => Err("")
+                    raw::TgResponse { ok: true, result: Some(res), .. } =>
+                        Ok(From::from(res)),
+
+                    raw::TgResponse { ok: false, description: Some(description), error_code: Some(error_code), .. } =>
+                        Err(Error::Telegram { error_code, description }),
+
+                    _ =>
+                        Err(Error::UnknownError(String::from("Unknown telegram response")))
                 }
             })
     }

@@ -15,7 +15,7 @@ pub struct GetUpdates {
 
 #[derive(Serialize, Debug)]
 #[serde(rename_all = "snake_case")]
-enum AllowedUpdates {
+pub enum AllowedUpdates {
     Message,
     EditedMessage,
     ChannelPost,

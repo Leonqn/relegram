@@ -8,12 +8,18 @@ pub enum Error {
     Hyper(hyper::Error),
     Serde(serde_json::Error),
     Telegram { error_code: i32, description: String },
+    BadMessage(BadMessage),
     UnknownError(String),
+}
+
+#[derive(Debug)]
+pub enum BadMessage {
+    WrongForwardArguments
 }
 
 impl From<hyper::Error> for Error {
     fn from(err: hyper::Error) -> Self {
-        Error::Http(err)
+        Error::Hyper(err)
     }
 }
 
@@ -49,6 +55,12 @@ impl fmt::Display for Error {
 
             Error::Telegram {error_code, description} =>
                 write!(f, "Error response from telegram bot api: error_code: {}, description: {}", error_code, description),
+
+            Error::BadMessage(message) =>
+                match message {
+                    BadMessage::WrongForwardArguments =>
+                        write!(f, "Unexpected message forwards field combination"),
+                }
 
             Error::UnknownError(s) =>
                 write!(f, "Unknown error has occured: {}", s)
