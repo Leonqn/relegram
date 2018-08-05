@@ -61,6 +61,7 @@ pub enum MessageEntity {
     Pre(String),
     TextLink { text: String, link: String },
     TextMention { mention: String, user: User },
+    Unknown { typ: String, offset: i32, length: i32 },
 }
 
 #[derive(Clone, Debug)]
@@ -126,55 +127,68 @@ impl TryFrom<raw::message::Message> for Message {
             fn try_into_message_kind(text: Option<String>,
                                      entities: Option<Vec<raw::message::MessageEntity>>,
                                      voice: Option<raw::message::Voice>) -> Result<MessageKind, UnexpectedMessage> {
-                if let Some(text) = text {
-                    let entities =
-                        entities.map(|entities| entities.into_iter().map(|entity| {
-                            let captured = String::from(&text[(entity.offset as usize)..(entity.offset as usize + entity.length as usize)]);
-                            match entity.typ.as_ref() {
-                                "mention" =>
-                                    Ok(MessageEntity::Mention(captured)),
-                                "hashtag" =>
-                                    Ok(MessageEntity::Hashtag(captured)),
-                                "cashtag" =>
-                                    Ok(MessageEntity::Cashtag(captured)),
-                                "bot_command" =>
-                                    Ok(MessageEntity::BotCommand(captured)),
-                                "url" =>
-                                    Ok(MessageEntity::Url(captured)),
-                                "email" =>
-                                    Ok(MessageEntity::Email(captured)),
-                                "phone_number" =>
-                                    Ok(MessageEntity::PhoneNumber(captured)),
-                                "bold" =>
-                                    Ok(MessageEntity::Bold(captured)),
-                                "italic" =>
-                                    Ok(MessageEntity::Italic(captured)),
-                                "code" =>
-                                    Ok(MessageEntity::Code(captured)),
-                                "pre" =>
-                                    Ok(MessageEntity::Pre(captured)),
-                                "text_link" =>
-                                    if let Some(link) = entity.url {
-                                        Ok(MessageEntity::TextLink { text: captured, link })
-                                    } else {
-                                        Err(UnexpectedMessage::WrongMessageEntity)
+                fn into_entities(text: &str, entities: Option<Vec<raw::message::MessageEntity>>) -> Option<Vec<MessageEntity>> {
+                    entities.map(|entities| entities.into_iter().map(|entity| {
+                        let captured = String::from(&text[(entity.offset as usize)..(entity.offset as usize + entity.length as usize)]);
+                        match entity.typ.as_ref() {
+                            "mention" =>
+                                MessageEntity::Mention(captured),
+                            "hashtag" =>
+                                MessageEntity::Hashtag(captured),
+                            "cashtag" =>
+                                MessageEntity::Cashtag(captured),
+                            "bot_command" =>
+                                MessageEntity::BotCommand(captured),
+                            "url" =>
+                                MessageEntity::Url(captured),
+                            "email" =>
+                                MessageEntity::Email(captured),
+                            "phone_number" =>
+                                MessageEntity::PhoneNumber(captured),
+                            "bold" =>
+                                MessageEntity::Bold(captured),
+                            "italic" =>
+                                MessageEntity::Italic(captured),
+                            "code" =>
+                                MessageEntity::Code(captured),
+                            "pre" =>
+                                MessageEntity::Pre(captured),
+                            "text_link" =>
+                                if let Some(link) = entity.url {
+                                    MessageEntity::TextLink { text: captured, link }
+                                } else {
+                                    MessageEntity::Unknown {
+                                        typ: entity.typ,
+                                        offset: entity.offset,
+                                        length: entity.length,
                                     }
-                                "text_mention" =>
-                                    if let Some(user) = entity.user {
-                                        Ok(MessageEntity::TextMention { mention: captured, user: From::from(user) })
-                                    } else {
-                                        Err(UnexpectedMessage::WrongMessageEntity)
+                                }
+                            "text_mention" =>
+                                if let Some(user) = entity.user {
+                                    MessageEntity::TextMention { mention: captured, user: From::from(user) }
+                                } else {
+                                    MessageEntity::Unknown {
+                                        typ: entity.typ,
+                                        offset: entity.offset,
+                                        length: entity.length,
                                     }
-                                _ =>
-                                    Err(UnexpectedMessage::UnsupportedMessageEntity)
-
-                            }
-                        }).collect())
-                            .map_or(Ok(None), |x: Result<Vec<MessageEntity>, UnexpectedMessage>| x.map(Some));
-                    return entities.map(|entities| MessageKind::Text { text, entities })
+                                }
+                            _ =>
+                                MessageEntity::Unknown {
+                                    typ: entity.typ,
+                                    offset: entity.offset,
+                                    length: entity.length,
+                                }
+                        }
+                    }).collect())
                 }
 
-                Err(UnexpectedMessage::UnsupportedMessageKind)
+                if let Some(text) = text {
+                    let entities = into_entities(&text, entities);
+                    return Ok(MessageKind::Text { text, entities });
+                }
+
+                Err(UnexpectedMessage::Unsupported)
             }
 
             match message {
@@ -201,17 +215,17 @@ impl TryFrom<raw::message::Message> for Message {
                         .and_then(move |forward| try_into_reply(reply_to_message).map(|reply| (forward, reply)))
                         .and_then(|(forward, reply)| try_into_message_kind(text, entities, voice).map(|kind| (forward, reply, kind)))
                         .map(|(forward, reply, kind)|
-                                 Message {
-                                     id: message_id,
-                                     date: Utc.timestamp(date as i64, 0),
-                                     from: into_message_from(from, chat, author_signature),
-                                     forward,
-                                     edit_date: edit_date.map(|x| Utc.timestamp(x as i64, 0)),
-                                     reply_to_message: reply.map(Box::new),
-                                     kind,
-            }),
-            _ => unimplemented!()
+                            Message {
+                                id: message_id,
+                                date: Utc.timestamp(date as i64, 0),
+                                from: into_message_from(from, chat, author_signature),
+                                forward,
+                                edit_date: edit_date.map(|x| Utc.timestamp(x as i64, 0)),
+                                reply_to_message: reply.map(Box::new),
+                                kind,
+                            }),
+                _ => unimplemented!()
+            }
         }
     }
-}
 }

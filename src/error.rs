@@ -26,10 +26,9 @@ pub enum UnexpectedUpdate {
 
 #[derive(Debug)]
 pub enum UnexpectedMessage {
+    /// this should not really happen
     WrongForwardArguments,
-    WrongMessageEntity,
-    UnsupportedMessageEntity,
-    UnsupportedMessageKind,
+    Unsupported,
 }
 
 impl From<UnexpectedMessage> for UnexpectedUpdate {
@@ -91,11 +90,7 @@ impl fmt::Display for Error {
                                 match unexpected_message {
                                     UnexpectedMessage::WrongForwardArguments =>
                                         write!(f, "Unexpected forwards fields combination in update {}", id),
-                                    UnexpectedMessage::WrongMessageEntity =>
-                                        write!(f, "Wrong message entity {}", id),
-                                    UnexpectedMessage::UnsupportedMessageEntity =>
-                                        write!(f, "UnknownMessageEntity {}", id),
-                                    UnexpectedMessage::UnsupportedMessageKind =>
+                                    UnexpectedMessage::Unsupported =>
                                         write!(f, "Unsupported message in {}", id),
                                 }
                             UnexpectedUpdate::Unsupported =>
