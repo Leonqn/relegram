@@ -1,6 +1,6 @@
 use responses::raw::chat;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Channel {
     pub id: i64,
 }

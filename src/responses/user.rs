@@ -1,6 +1,6 @@
 use super::raw::user;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct User {}
 
 impl From<user::User> for User {

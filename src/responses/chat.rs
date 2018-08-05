@@ -1,6 +1,6 @@
 use super::raw::chat;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Chat {
     pub id: i64
 }

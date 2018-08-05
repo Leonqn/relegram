@@ -17,18 +17,18 @@ pub struct Message {
     pub media_group_id: Option<String>,
     pub author_signature: Option<String>,
     pub text: Option<String>,
-    //    pub entities: Option<Vec<MessageEntity>>,
-//    pub caption_entities: Option<Vec<MessageEntity>>,
-//    pub audio: Option<Audio>,
-//    pub document: Option<Document>,
-//    pub animation: Option<Animation>,
+    pub entities: Option<Vec<MessageEntity>>,
+    pub caption_entities: Option<Vec<MessageEntity>>,
+    pub audio: Option<Audio>,
+    pub document: Option<Document>,
+    pub animation: Option<Animation>,
 //    pub game: Option<Game>,
-//    pub photo: Option<Vec<Photo>>,
-//    pub sticker: Option<Stricker>,
-//    pub video: Option<Video>,
+    pub photo: Option<Vec<PhotoSize>>,
+    pub sticker: Option<Sticker>,
+    pub video: Option<Video>,
     pub voice: Option<Voice>,
-//    pub video_note: Option<VideoNote>,
-//    pub caption: Option<String>,
+    pub video_note: Option<VideoNote>,
+    pub caption: Option<String>,
 //    pub contact: Option<Contact>,
 //    pub location: Option<Location>,
 //    pub venue: Option<Venue>,
@@ -49,6 +49,77 @@ pub struct Message {
 //    pub passport_data: Option<PassportData>
 }
 
+#[derive(Deserialize, Debug)]
+pub struct MessageEntity {
+    #[serde(rename = "type")]
+    pub typ: String,
+    pub offset: i32,
+    pub length: i32,
+    pub url: Option<String>,
+    pub user: Option<User>
+
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Audio {
+    pub file_id: String,
+    pub duration: i32,
+    pub performer: Option<String>,
+    pub title: Option<String>,
+    pub mime_type: Option<String>,
+    pub file_size: Option<i32>,
+    pub thumb: Option<PhotoSize>
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Document {
+    pub file_id: String,
+    pub thumb: Option<PhotoSize>,
+    pub file_name: Option<String>,
+    pub mime_type: Option<String>,
+    pub file_size: Option<i32>
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Animation {
+    pub file_id: String,
+    pub width: i32,
+    pub height: i32,
+    pub duration: i32,
+    pub thumb: Option<PhotoSize>,
+    pub file_name: Option<String>,
+    pub mime_type: Option<String>,
+    pub file_size: Option<String>
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Game {
+
+}
+
+#[derive(Deserialize, Debug)]
+pub struct PhotoSize {
+    pub file_id: String,
+    pub width: i32,
+    pub height: i32,
+    pub file_size: Option<i32>
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Sticker {
+
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Video {
+    pub file_id: String,
+    pub width: i32,
+    pub height: i32,
+    pub duration: i32,
+    pub thumb: Option<PhotoSize>,
+    pub mime_type: Option<String>,
+    pub file_size: Option<String>
+}
 
 #[derive(Deserialize, Debug)]
 pub struct Voice {
@@ -59,9 +130,56 @@ pub struct Voice {
 }
 
 #[derive(Deserialize, Debug)]
+pub struct VideoNote {
+    pub file_id: String,
+    pub length: i32,
+    pub duration: i32,
+    pub thumb: Option<PhotoSize>,
+    pub file_size: Option<String>
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Contact {
+    pub phone_number: String,
+    pub first_name: String,
+    pub last_name: Option<String>,
+    pub user_d: Option<i32>,
+    pub vcard: Option<String>
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Location {
+    pub longitude: f32,
+    pub latitude: f32
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Venue {
+    pub location: Location,
+    pub title: String,
+    pub address: String,
+    pub foursquare_id: Option<String>,
+    pub foursquare_type: Option<String>
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Invoice {
+
+}
+
+#[derive(Deserialize, Debug)]
+pub struct SuccessfulPayment {
+
+}
+
+#[derive(Deserialize, Debug)]
+pub struct PassportData {
+
+}
+
+#[derive(Deserialize, Debug)]
 pub struct File {
     pub file_id: String,
     pub file_size: Option<i32>,
     pub file_path: Option<String>
-
 }

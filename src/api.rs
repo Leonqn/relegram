@@ -11,7 +11,8 @@ use serde::de::DeserializeOwned;
 use hyper::Request;
 use serde_json;
 use responses::raw;
-use responses::Update;
+use responses::update::*;
+use std::convert::TryFrom;
 
 const BASE_API_URI: &'static str = "https://api.telegram.org/bot";
 
@@ -50,7 +51,12 @@ impl BotClient {
 
     pub fn get_updates(&self, request: GetUpdates) -> impl Future<Item=Vec<Update>, Error=Error> {
         self.send(request, "getUpdates")
-            .map(|x: Vec<raw::Update>| x.into_iter().map(From::from).collect())
+            .and_then(|x: Vec<raw::update::Update>|
+                x.into_iter()
+                    .map(TryFrom::try_from)
+                    .collect::<Result<Vec<Update>, UnexpectedResponse>>()
+                    .map_err(From::from))
+
     }
 
     fn send<TRequest, TResult>(&self, request: TRequest, method: &'static str) -> impl Future<Item=TResult, Error=Error>
@@ -74,7 +80,7 @@ impl BotClient {
                         Ok(From::from(res)),
 
                     raw::TgResponse { ok: false, description: Some(description), error_code: Some(error_code), .. } =>
-                        Err(Error::Telegram { error_code, description }),
+                        Err(Error::TelegramApi { error_code, description }),
 
                     _ =>
                         Err(Error::UnknownError(String::from("Unknown telegram response")))

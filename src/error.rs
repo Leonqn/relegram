@@ -7,14 +7,41 @@ use std::error;
 pub enum Error {
     Hyper(hyper::Error),
     Serde(serde_json::Error),
-    Telegram { error_code: i32, description: String },
-    BadMessage(BadMessage),
+    TelegramApi { error_code: i32, description: String },
+    UnexpectedResponse(UnexpectedResponse),
     UnknownError(String),
 }
 
+
 #[derive(Debug)]
-pub enum BadMessage {
-    WrongForwardArguments
+pub enum UnexpectedResponse {
+    UnexpectedUpdate { id: i32, kind: UnexpectedUpdate }
+}
+
+#[derive(Debug)]
+pub enum UnexpectedUpdate {
+    UnexpectedMessage(UnexpectedMessage),
+    Unsupported,
+}
+
+#[derive(Debug)]
+pub enum UnexpectedMessage {
+    WrongForwardArguments,
+    WrongMessageEntity,
+    UnsupportedMessageEntity,
+    UnsupportedMessageKind,
+}
+
+impl From<UnexpectedMessage> for UnexpectedUpdate {
+    fn from(x: UnexpectedMessage) -> Self {
+        UnexpectedUpdate::UnexpectedMessage(x)
+    }
+}
+
+impl From<UnexpectedResponse> for Error {
+    fn from(x: UnexpectedResponse) -> Self {
+        Error::UnexpectedResponse(x)
+    }
 }
 
 impl From<hyper::Error> for Error {
@@ -53,18 +80,31 @@ impl fmt::Display for Error {
             Error::Serde(serde) =>
                 write!(f, "Serde error has occured: {}", serde),
 
-            Error::Telegram {error_code, description} =>
+            Error::TelegramApi { error_code, description } =>
                 write!(f, "Error response from telegram bot api: error_code: {}, description: {}", error_code, description),
 
-            Error::BadMessage(message) =>
-                match message {
-                    BadMessage::WrongForwardArguments =>
-                        write!(f, "Unexpected message forwards field combination"),
+            Error::UnexpectedResponse(unexpected_response) =>
+                match unexpected_response {
+                    UnexpectedResponse::UnexpectedUpdate { id, kind } =>
+                        match kind {
+                            UnexpectedUpdate::UnexpectedMessage(unexpected_message) =>
+                                match unexpected_message {
+                                    UnexpectedMessage::WrongForwardArguments =>
+                                        write!(f, "Unexpected forwards fields combination in update {}", id),
+                                    UnexpectedMessage::WrongMessageEntity =>
+                                        write!(f, "Wrong message entity {}", id),
+                                    UnexpectedMessage::UnsupportedMessageEntity =>
+                                        write!(f, "UnknownMessageEntity {}", id),
+                                    UnexpectedMessage::UnsupportedMessageKind =>
+                                        write!(f, "Unsupported message in {}", id),
+                                }
+                            UnexpectedUpdate::Unsupported =>
+                                write!(f, "Unsupported update in update {}", id),
+                        }
                 }
 
             Error::UnknownError(s) =>
                 write!(f, "Unknown error has occured: {}", s)
         }
-
     }
 }
