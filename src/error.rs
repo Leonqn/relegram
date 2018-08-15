@@ -8,39 +8,15 @@ pub enum Error {
     Hyper(hyper::Error),
     Serde(serde_json::Error),
     TelegramApi { error_code: i32, description: String },
-    UnexpectedResponse(UnexpectedResponse),
+    UnexpectedResponse { raw_response: String, kind: UnexpectedResponse },
     UnknownError(String),
 }
 
 
 #[derive(Debug)]
 pub enum UnexpectedResponse {
-    UnexpectedUpdate { id: i32, kind: UnexpectedUpdate }
-}
-
-#[derive(Debug)]
-pub enum UnexpectedUpdate {
-    UnexpectedMessage(UnexpectedMessage),
+    ConvertError(String),
     Unsupported,
-}
-
-#[derive(Debug)]
-pub enum UnexpectedMessage {
-    /// this should not really happen
-    WrongForwardArguments,
-    Unsupported,
-}
-
-impl From<UnexpectedMessage> for UnexpectedUpdate {
-    fn from(x: UnexpectedMessage) -> Self {
-        UnexpectedUpdate::UnexpectedMessage(x)
-    }
-}
-
-impl From<UnexpectedResponse> for Error {
-    fn from(x: UnexpectedResponse) -> Self {
-        Error::UnexpectedResponse(x)
-    }
 }
 
 impl From<hyper::Error> for Error {
@@ -82,20 +58,12 @@ impl fmt::Display for Error {
             Error::TelegramApi { error_code, description } =>
                 write!(f, "Error response from telegram bot api: error_code: {}, description: {}", error_code, description),
 
-            Error::UnexpectedResponse(unexpected_response) =>
-                match unexpected_response {
-                    UnexpectedResponse::UnexpectedUpdate { id, kind } =>
-                        match kind {
-                            UnexpectedUpdate::UnexpectedMessage(unexpected_message) =>
-                                match unexpected_message {
-                                    UnexpectedMessage::WrongForwardArguments =>
-                                        write!(f, "Unexpected forwards fields combination in update {}", id),
-                                    UnexpectedMessage::Unsupported =>
-                                        write!(f, "Unsupported message in {}", id),
-                                }
-                            UnexpectedUpdate::Unsupported =>
-                                write!(f, "Unsupported update in update {}", id),
-                        }
+            Error::UnexpectedResponse { raw_response, kind } =>
+                match kind {
+                    UnexpectedResponse::ConvertError(s) =>
+                        write!(f, "Convert from raw data to data model. {}. See raw_response", s),
+                    UnexpectedResponse::Unsupported =>
+                        write!(f, "Unsupported response. See raw_response "),
                 }
 
             Error::UnknownError(s) =>

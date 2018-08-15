@@ -24,5 +24,5 @@ pub enum AllowedUpdates {
     ChosenInlineResult,
     CallbackQuery,
     ShippingQuery,
-    PreCheckoutQuery
+    PreCheckoutQuery,
 }

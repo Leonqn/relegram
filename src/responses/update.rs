@@ -21,20 +21,23 @@ impl TryFrom<raw::update::Update> for Update {
     fn try_from(update: raw::update::Update) -> Result<Self, UnexpectedResponse> {
         let id = update.update_id;
         let message =
-            match (update.message, update.edited_message, update.channel_post, update.edited_channel_post) {
-                (Some(msg), None, None, None) =>
-                    TryFrom::try_from(msg).map(UpdateKind::Message).map_err(From::from),
-                (None, Some(msg), None, None) =>
-                    TryFrom::try_from(msg).map(UpdateKind::EditedMessage).map_err(From::from),
-                (None, None, Some(msg), None) =>
-                    TryFrom::try_from(msg).map(UpdateKind::Message).map_err(From::from),
-                (None, None, None, Some(msg)) =>
-                    TryFrom::try_from(msg).map(UpdateKind::EditedMessage).map_err(From::from),
+            match update {
+                raw::update::Update { message: Some(msg), .. } =>
+                    TryFrom::try_from(msg).map(UpdateKind::Message),
+
+                raw::update::Update { edited_message: Some(msg), .. } =>
+                    TryFrom::try_from(msg).map(UpdateKind::EditedMessage),
+
+                raw::update::Update { channel_post: Some(post), .. } =>
+                    TryFrom::try_from(post).map(UpdateKind::Message),
+
+                raw::update::Update { edited_channel_post: Some(post), .. } =>
+                    TryFrom::try_from(post).map(UpdateKind::Message),
+
                 _ =>
-                    Err(UnexpectedUpdate::Unsupported)
+                    Err(UnexpectedResponse::Unsupported)
             };
         message
             .map(|x| Update { id, kind: x })
-            .map_err(|x| UnexpectedResponse::UnexpectedUpdate { id, kind: x })
     }
 }

@@ -1,6 +1,6 @@
 use responses::raw::message::Message;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct Chat {
     pub id: i64,
     #[serde(rename = "type")]
@@ -18,7 +18,7 @@ pub struct Chat {
     pub can_set_sticker_set: Option<bool>
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct ChatPhoto {
     pub small_file_id: String,
     pub big_file_id: String

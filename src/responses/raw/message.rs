@@ -1,7 +1,7 @@
 use responses::raw::user::User;
 use responses::raw::chat::Chat;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct Message {
     pub message_id: i32,
     pub from: Option<User>,
@@ -22,45 +22,44 @@ pub struct Message {
     pub audio: Option<Audio>,
     pub document: Option<Document>,
     pub animation: Option<Animation>,
-//    pub game: Option<Game>,
+    pub game: Option<Game>,
     pub photo: Option<Vec<PhotoSize>>,
     pub sticker: Option<Sticker>,
     pub video: Option<Video>,
     pub voice: Option<Voice>,
     pub video_note: Option<VideoNote>,
     pub caption: Option<String>,
-//    pub contact: Option<Contact>,
-//    pub location: Option<Location>,
-//    pub venue: Option<Venue>,
-//    pub new_chat_members: Option<Vec<User>>,
-//    pub left_chat_member: Option<User>,
-//    pub new_chat_title: Option<String>,
-//    pub new_chat_photo: Option<Vec<String>>,
-//    pub delete_chat_photo: Option<bool>,
-//    pub group_chat_created: Option<bool>,
-//    pub supergroup_chat_created: Option<bool>,
-//    pub channel_chat_created: Option<bool>,
-//    pub migrate_to_chat_id: Option<i32>,
-//    pub migrate_from_chat_id: Option<i32>,
-//    pub pinned_message: Option<Message>,
-//    pub invoice: Option<Invoice>,
-//    pub successful_payment: Option<SuccessfulPayment>,
-//    pub connected_website: Option<string>,
-//    pub passport_data: Option<PassportData>
+    pub contact: Option<Contact>,
+    pub location: Option<Location>,
+    pub venue: Option<Venue>,
+    pub new_chat_members: Option<Vec<User>>,
+    pub left_chat_member: Option<User>,
+    pub new_chat_title: Option<String>,
+    pub new_chat_photo: Option<Vec<PhotoSize>>,
+    pub delete_chat_photo: Option<bool>,
+    pub group_chat_created: Option<bool>,
+    pub supergroup_chat_created: Option<bool>,
+    pub channel_chat_created: Option<bool>,
+    pub migrate_to_chat_id: Option<i64>,
+    pub migrate_from_chat_id: Option<i64>,
+    pub pinned_message: Option<Box<Message>>,
+    pub invoice: Option<Invoice>,
+    pub successful_payment: Option<SuccessfulPayment>,
+    pub connected_website: Option<String>,
+    pub passport_data: Option<PassportData>
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct MessageEntity {
     #[serde(rename = "type")]
     pub typ: String,
     pub offset: i32,
     pub length: i32,
     pub url: Option<String>,
-    pub user: Option<User>
-
+    pub user: Option<User>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct Audio {
     pub file_id: String,
     pub duration: i32,
@@ -68,19 +67,19 @@ pub struct Audio {
     pub title: Option<String>,
     pub mime_type: Option<String>,
     pub file_size: Option<i32>,
-    pub thumb: Option<PhotoSize>
+    pub thumb: Option<PhotoSize>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct Document {
     pub file_id: String,
     pub thumb: Option<PhotoSize>,
     pub file_name: Option<String>,
     pub mime_type: Option<String>,
-    pub file_size: Option<i32>
+    pub file_size: Option<i32>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct Animation {
     pub file_id: String,
     pub width: i32,
@@ -89,28 +88,56 @@ pub struct Animation {
     pub thumb: Option<PhotoSize>,
     pub file_name: Option<String>,
     pub mime_type: Option<String>,
-    pub file_size: Option<String>
+    pub file_size: Option<String>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct Game {
-
+    pub title: String,
+    pub description: String,
+    pub photo: Vec<PhotoSize>,
+    pub text: Option<String>,
+    pub text_entities: Option<MessageEntity>,
+    pub animation: Option<Animation>
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct PhotoSize {
     pub file_id: String,
     pub width: i32,
     pub height: i32,
-    pub file_size: Option<i32>
+    pub file_size: Option<i32>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct Sticker {
-
+    pub file_id: String,
+    pub width: i32,
+    pub height: i32,
+    pub thumb: Option<PhotoSize>,
+    pub emoji: Option<String>,
+    pub set_name: Option<String>,
+    pub mask_position: Option<MaskPosition>,
+    pub file_size: Option<i32>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
+pub enum MaskPositionPoint {
+    Forehead,
+    Eyes,
+    Mouth,
+    Chin,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct MaskPosition {
+    pub point: MaskPositionPoint,
+    pub x_shift: f32,
+    pub y_shift: f32,
+    pub scale: f32,
+}
+
+#[derive(Deserialize, Debug, Clone)]
 pub struct Video {
     pub file_id: String,
     pub width: i32,
@@ -118,68 +145,62 @@ pub struct Video {
     pub duration: i32,
     pub thumb: Option<PhotoSize>,
     pub mime_type: Option<String>,
-    pub file_size: Option<String>
+    pub file_size: Option<String>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct Voice {
     pub file_id: String,
     pub duration: i32,
     pub mime_type: Option<String>,
-    pub file_size: Option<i32>
+    pub file_size: Option<i32>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct VideoNote {
     pub file_id: String,
     pub length: i32,
     pub duration: i32,
     pub thumb: Option<PhotoSize>,
-    pub file_size: Option<String>
+    pub file_size: Option<String>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct Contact {
     pub phone_number: String,
     pub first_name: String,
     pub last_name: Option<String>,
     pub user_d: Option<i32>,
-    pub vcard: Option<String>
+    pub vcard: Option<String>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct Location {
     pub longitude: f32,
-    pub latitude: f32
+    pub latitude: f32,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct Venue {
     pub location: Location,
     pub title: String,
     pub address: String,
     pub foursquare_id: Option<String>,
-    pub foursquare_type: Option<String>
+    pub foursquare_type: Option<String>,
 }
 
-#[derive(Deserialize, Debug)]
-pub struct Invoice {
+#[derive(Deserialize, Debug, Clone)]
+pub struct Invoice {}
 
-}
+#[derive(Deserialize, Debug, Clone)]
+pub struct SuccessfulPayment {}
 
-#[derive(Deserialize, Debug)]
-pub struct SuccessfulPayment {
+#[derive(Deserialize, Debug, Clone)]
+pub struct PassportData {}
 
-}
-
-#[derive(Deserialize, Debug)]
-pub struct PassportData {
-
-}
-
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct File {
     pub file_id: String,
     pub file_size: Option<i32>,
-    pub file_path: Option<String>
+    pub file_path: Option<String>,
 }

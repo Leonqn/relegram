@@ -1,5 +1,3 @@
-use responses::raw::message::Message;
-
 pub mod message;
 pub mod user;
 pub mod chat;

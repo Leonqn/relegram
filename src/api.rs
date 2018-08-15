@@ -13,6 +13,7 @@ use serde_json;
 use responses::raw;
 use responses::update::*;
 use std::convert::TryFrom;
+use std::str;
 
 const BASE_API_URI: &'static str = "https://api.telegram.org/bot";
 
@@ -50,16 +51,16 @@ impl BotClient {
     }
 
     pub fn get_updates(&self, request: GetUpdates) -> impl Future<Item=Vec<Update>, Error=Error> {
-        self.send(request, "getUpdates")
-            .and_then(|x: Vec<raw::update::Update>|
-                x.into_iter()
-                    .map(TryFrom::try_from)
-                    .collect::<Result<Vec<Update>, UnexpectedResponse>>()
-                    .map_err(From::from))
+        fn map(x: Vec<raw::update::Update>) -> Result<Vec<Update>, UnexpectedResponse> {
+            x.into_iter()
+                .map(TryFrom::try_from)
+                .collect::<Result<Vec<Update>, UnexpectedResponse>>()
+        }
 
+        self.send(request, "getUpdates", map)
     }
 
-    fn send<TRequest, TResult>(&self, request: TRequest, method: &'static str) -> impl Future<Item=TResult, Error=Error>
+    fn send<TRequest, TResult, TMappedResult>(&self, request: TRequest, method: &'static str, result_map: fn(TResult) -> Result<TMappedResult, UnexpectedResponse>) -> impl Future<Item=TMappedResult, Error=Error>
         where TRequest: Serialize,
               TResult: DeserializeOwned,
     {
@@ -73,17 +74,24 @@ impl BotClient {
 
         self.http_client.request(request)
             .and_then(|r| r.into_body().concat2())
-            .then(|body| {
-                let response: raw::TgResponse<TResult> = serde_json::from_slice(&body?)?;
+            .then(move |body| {
+                let body_ref = &body?;
+                let response: raw::TgResponse<TResult> = serde_json::from_slice(body_ref)?;
                 match response {
                     raw::TgResponse { ok: true, result: Some(res), .. } =>
-                        Ok(From::from(res)),
+                        result_map(res)
+                            .map_err(|err|
+                                str::from_utf8(body_ref)
+                                    .map(|x| Error::UnexpectedResponse { raw_response: String::from(x), kind: err })
+                                    .unwrap_or(Error::UnknownError(String::from("Error while converting tg response to utf8 string")))),
 
                     raw::TgResponse { ok: false, description: Some(description), error_code: Some(error_code), .. } =>
                         Err(Error::TelegramApi { error_code, description }),
 
                     _ =>
-                        Err(Error::UnknownError(String::from("Unknown telegram response")))
+                        Err(str::from_utf8(body_ref)
+                            .map(|x| Error::UnknownError(String::from(x)))
+                            .unwrap_or(Error::UnknownError(String::from("Error while converting tg response to utf8 string"))))
                 }
             })
     }
