@@ -3,17 +3,17 @@ use responses::raw::chat::Chat;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Message {
-    pub message_id: i32,
+    pub message_id: i64,
     pub from: Option<User>,
-    pub date: i32,
+    pub date: i64,
     pub chat: Chat,
     pub forward_from: Option<User>,
     pub forward_from_chat: Option<Chat>,
-    pub forward_from_message_id: Option<i32>,
+    pub forward_from_message_id: Option<i64>,
     pub forward_signature: Option<String>,
-    pub forward_date: Option<i32>,
+    pub forward_date: Option<i64>,
     pub reply_to_message: Option<Box<Message>>,
-    pub edit_date: Option<i32>,
+    pub edit_date: Option<i64>,
     pub media_group_id: Option<String>,
     pub author_signature: Option<String>,
     pub text: Option<String>,
@@ -53,8 +53,8 @@ pub struct Message {
 pub struct MessageEntity {
     #[serde(rename = "type")]
     pub typ: String,
-    pub offset: i32,
-    pub length: i32,
+    pub offset: i64,
+    pub length: i64,
     pub url: Option<String>,
     pub user: Option<User>,
 }
@@ -62,11 +62,11 @@ pub struct MessageEntity {
 #[derive(Deserialize, Debug, Clone)]
 pub struct Audio {
     pub file_id: String,
-    pub duration: i32,
+    pub duration: i64,
     pub performer: Option<String>,
     pub title: Option<String>,
     pub mime_type: Option<String>,
-    pub file_size: Option<i32>,
+    pub file_size: Option<i64>,
     pub thumb: Option<PhotoSize>,
 }
 
@@ -76,15 +76,15 @@ pub struct Document {
     pub thumb: Option<PhotoSize>,
     pub file_name: Option<String>,
     pub mime_type: Option<String>,
-    pub file_size: Option<i32>,
+    pub file_size: Option<i64>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Animation {
     pub file_id: String,
-    pub width: i32,
-    pub height: i32,
-    pub duration: i32,
+    pub width: i64,
+    pub height: i64,
+    pub duration: i64,
     pub thumb: Option<PhotoSize>,
     pub file_name: Option<String>,
     pub mime_type: Option<String>,
@@ -104,21 +104,21 @@ pub struct Game {
 #[derive(Deserialize, Debug, Clone)]
 pub struct PhotoSize {
     pub file_id: String,
-    pub width: i32,
-    pub height: i32,
-    pub file_size: Option<i32>,
+    pub width: i64,
+    pub height: i64,
+    pub file_size: Option<i64>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Sticker {
     pub file_id: String,
-    pub width: i32,
-    pub height: i32,
+    pub width: i64,
+    pub height: i64,
     pub thumb: Option<PhotoSize>,
     pub emoji: Option<String>,
     pub set_name: Option<String>,
     pub mask_position: Option<MaskPosition>,
-    pub file_size: Option<i32>,
+    pub file_size: Option<i64>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -140,9 +140,9 @@ pub struct MaskPosition {
 #[derive(Deserialize, Debug, Clone)]
 pub struct Video {
     pub file_id: String,
-    pub width: i32,
-    pub height: i32,
-    pub duration: i32,
+    pub width: i64,
+    pub height: i64,
+    pub duration: i64,
     pub thumb: Option<PhotoSize>,
     pub mime_type: Option<String>,
     pub file_size: Option<String>,
@@ -151,16 +151,16 @@ pub struct Video {
 #[derive(Deserialize, Debug, Clone)]
 pub struct Voice {
     pub file_id: String,
-    pub duration: i32,
+    pub duration: i64,
     pub mime_type: Option<String>,
-    pub file_size: Option<i32>,
+    pub file_size: Option<i64>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct VideoNote {
     pub file_id: String,
-    pub length: i32,
-    pub duration: i32,
+    pub length: i64,
+    pub duration: i64,
     pub thumb: Option<PhotoSize>,
     pub file_size: Option<String>,
 }
@@ -170,7 +170,7 @@ pub struct Contact {
     pub phone_number: String,
     pub first_name: String,
     pub last_name: Option<String>,
-    pub user_d: Option<i32>,
+    pub user_d: Option<i64>,
     pub vcard: Option<String>,
 }
 
@@ -201,6 +201,6 @@ pub struct PassportData {}
 #[derive(Deserialize, Debug, Clone)]
 pub struct File {
     pub file_id: String,
-    pub file_size: Option<i32>,
+    pub file_size: Option<i64>,
     pub file_path: Option<String>,
 }

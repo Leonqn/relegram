@@ -24,7 +24,7 @@ use responses::user::User;
 
 #[derive(Clone, Debug)]
 pub struct Message {
-    pub id: i32,
+    pub id: i64,
     pub date: DateTime<Utc>,
     pub from: MessageFrom,
     pub forward: Option<Forward>,
@@ -57,7 +57,7 @@ pub enum ForwardFrom {
     User(User),
     Channel {
         channel: Channel,
-        original_message_id: i32,
+        original_message_id: i64,
         original_signature: Option<String>,
     },
 }
@@ -77,7 +77,7 @@ pub enum MessageEntity {
     Pre(String),
     TextLink { text: String, link: String },
     TextMention { mention: String, user: User },
-    Unknown { typ: String, offset: i32, length: i32 },
+    Unknown { typ: String, offset: i64, length: i64 },
 }
 
 #[derive(Clone, Debug)]
@@ -129,9 +129,9 @@ impl TryFrom<raw::message::Message> for Message {
         {
             fn try_into_forward(from: Option<raw::user::User>,
                                 chat: Option<raw::chat::Chat>,
-                                id: Option<i32>,
+                                id: Option<i64>,
                                 sign: Option<String>,
-                                date: Option<i32>) -> Result<Option<Forward>, UnexpectedResponse> {
+                                date: Option<i64>) -> Result<Option<Forward>, UnexpectedResponse> {
                 match (from, chat, id, sign, date) {
                     (None, Some(chat), Some(id), sign, Some(date)) =>
                         TryFrom::try_from(chat)

@@ -14,12 +14,24 @@ use responses::raw;
 use responses::update::*;
 use std::convert::TryFrom;
 use std::str;
+use stream::UpdatesStream;
+use std::collections::VecDeque;
+use std::time::Duration;
 
 const BASE_API_URI: &'static str = "https://api.telegram.org/bot";
 
-pub struct BotClient {
+pub struct BotApiClient {
     http_client: Arc<Client<HttpsConnector<HttpConnector>, Body>>,
-    token: String,
+    token: Arc<String>,
+}
+
+impl Clone for BotApiClient {
+    fn clone(&self) -> Self {
+        BotApiClient {
+            http_client: Arc::clone(&self.http_client),
+            token: Arc::clone(&self.token)
+        }
+    }
 }
 
 pub enum HttpClient {
@@ -28,8 +40,8 @@ pub enum HttpClient {
     Arc(Arc<Client<HttpsConnector<HttpConnector>, Body>>),
 }
 
-impl BotClient {
-    pub fn new(http_client: HttpClient, token: String) -> BotClient {
+impl BotApiClient {
+    pub fn new(http_client: HttpClient, token: String) -> BotApiClient {
         let http_client =
             match http_client {
                 HttpClient::Default => {
@@ -43,14 +55,26 @@ impl BotClient {
                     http_client
                 }
             };
-
-        BotClient {
+        BotApiClient {
             http_client,
-            token,
+            token: Arc::new(token),
         }
     }
 
-    pub fn get_updates(&self, request: GetUpdates) -> impl Future<Item=Vec<Update>, Error=Error> {
+    pub fn incoming_updates(&self, mut request: GetUpdates, timeout: Duration) -> impl Stream<Item=Update, Error=Error> {
+        let cloned_self = self.clone();
+        let first_request = cloned_self.get_updates(&request, timeout);
+        let send_request = move |x| {
+            request.offset = x;
+            cloned_self.get_updates(&request, timeout) };
+        UpdatesStream {
+            bot_api_client: send_request,
+            buffer: VecDeque::new(),
+            executing_request: first_request,
+        }
+    }
+
+    pub fn get_updates(&self, request: &GetUpdates, timeout: Duration) -> impl Future<Item=Vec<Update>, Error=Error> {
         fn map(x: Vec<raw::update::Update>) -> Result<Vec<Update>, UnexpectedResponse> {
             x.into_iter()
                 .map(TryFrom::try_from)
@@ -60,7 +84,7 @@ impl BotClient {
         self.send(request, "getUpdates", map)
     }
 
-    fn send<TRequest, TResult, TMappedResult>(&self, request: TRequest, method: &'static str, result_map: fn(TResult) -> Result<TMappedResult, UnexpectedResponse>) -> impl Future<Item=TMappedResult, Error=Error>
+    fn send<TRequest, TResult, TMappedResult>(&self, request: &TRequest, method: &'static str, result_map: fn(TResult) -> Result<TMappedResult, UnexpectedResponse>) -> impl Future<Item=TMappedResult, Error=Error>
         where TRequest: Serialize,
               TResult: DeserializeOwned,
     {
@@ -68,7 +92,7 @@ impl BotClient {
         let request =
             Request::post(uri)
                 .header("content-type", "application/json")
-                .body(Body::from(serde_json::to_string(&request).expect("Error while serializing request")))
+                .body(Body::from(serde_json::to_string(request).expect("Error while serializing request")))
                 .expect("While creating request an error has occurred");
 
 

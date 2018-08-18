@@ -5,7 +5,7 @@ use super::raw;
 
 #[derive(Clone, Debug)]
 pub struct Update {
-    pub id: i32,
+    pub id: i64,
     pub kind: UpdateKind,
 }
 
