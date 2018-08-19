@@ -15,7 +15,7 @@ pub struct UpdatesStream<Fut, Sender> {
 
 impl<Fut, Sender> Stream for UpdatesStream<Fut, Sender>
     where Fut: Future<Item=Vec<Update>, Error=Error>,
-          Sender: FnMut(Option<i64>) -> Fut {
+          Sender: FnMut(i64) -> Fut {
     type Item = Update;
     type Error = Error;
 
@@ -33,7 +33,7 @@ impl<Fut, Sender> Stream for UpdatesStream<Fut, Sender>
                     max_id = max(update.id, max_id);
                     self.buffer.push_back(update)
                 }
-                self.executing_request = (self.bot_api_client)(Some(max_id + 1));
+                self.executing_request = (self.bot_api_client)(max_id + 1);
                 self.poll()
             }
 

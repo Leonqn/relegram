@@ -17,6 +17,7 @@ use std::str;
 use stream::UpdatesStream;
 use std::collections::VecDeque;
 use std::time::Duration;
+use responses::message::Message;
 
 const BASE_API_URI: &'static str = "https://api.telegram.org/bot";
 
@@ -65,13 +66,17 @@ impl BotApiClient {
         let cloned_self = self.clone();
         let first_request = cloned_self.get_updates(&request, timeout);
         let send_request = move |x| {
-            request.offset = x;
+            request.offset = Some(x);
             cloned_self.get_updates(&request, timeout) };
         UpdatesStream {
             bot_api_client: send_request,
             buffer: VecDeque::new(),
             executing_request: first_request,
         }
+    }
+
+    pub fn send_message<'s>(&self, request: &SendMessage<'s>, timeout: Duration) -> impl 's + Future<Item=Message, Error= Error> {
+        self.send(request, "sendMessage", <Message as TryFrom<raw::message::Message>>::try_from)
     }
 
     pub fn get_updates(&self, request: &GetUpdates, timeout: Duration) -> impl Future<Item=Vec<Update>, Error=Error> {
