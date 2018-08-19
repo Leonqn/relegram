@@ -1,2 +1,4 @@
 # relegram
-Telegram bot api client
+Telegram bot api client.
+Under development.
+
