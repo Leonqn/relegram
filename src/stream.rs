@@ -5,7 +5,6 @@ use futures::Future;
 use futures::Async;
 use futures::Stream;
 use std::cmp::max;
-use requests::GetUpdates;
 
 pub struct UpdatesStream<Fut, Sender> {
     pub bot_api_client: Sender,

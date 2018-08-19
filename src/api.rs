@@ -18,6 +18,8 @@ use stream::UpdatesStream;
 use std::collections::VecDeque;
 use std::time::Duration;
 use responses::message::Message;
+use requests::get::GetUpdatesRequest;
+use requests::send::SendMessageRequest;
 
 const BASE_API_URI: &'static str = "https://api.telegram.org/bot";
 
@@ -62,7 +64,7 @@ impl BotApiClient {
         }
     }
 
-    pub fn incoming_updates(&self, mut request: GetUpdates, timeout: Duration) -> impl Stream<Item=Update, Error=Error> {
+    pub fn incoming_updates(&self, mut request: GetUpdatesRequest, timeout: Duration) -> impl Stream<Item=Update, Error=Error> {
         let cloned_self = self.clone();
         let first_request = cloned_self.get_updates(&request, timeout);
         let send_request = move |x| {
@@ -75,25 +77,25 @@ impl BotApiClient {
         }
     }
 
-    pub fn send_message<'s>(&self, request: &SendMessage<'s>, timeout: Duration) -> impl 's + Future<Item=Message, Error= Error> {
-        self.send(request, "sendMessage", <Message as TryFrom<raw::message::Message>>::try_from)
+    pub fn send(&self, request: &SendMessageRequest, timeout: Duration) -> impl Future<Item=Message, Error= Error> {
+        self.send_request(request, <Message as TryFrom<raw::message::Message>>::try_from)
     }
 
-    pub fn get_updates(&self, request: &GetUpdates, timeout: Duration) -> impl Future<Item=Vec<Update>, Error=Error> {
+    pub fn get_updates(&self, request: &GetUpdatesRequest, timeout: Duration) -> impl Future<Item=Vec<Update>, Error=Error> {
         fn map(x: Vec<raw::update::Update>) -> Result<Vec<Update>, UnexpectedResponse> {
             x.into_iter()
                 .map(TryFrom::try_from)
                 .collect::<Result<Vec<Update>, UnexpectedResponse>>()
         }
 
-        self.send(request, "getUpdates", map)
+        self.send_request(request, map)
     }
 
-    fn send<TRequest, TResult, TMappedResult>(&self, request: &TRequest, method: &'static str, result_map: fn(TResult) -> Result<TMappedResult, UnexpectedResponse>) -> impl Future<Item=TMappedResult, Error=Error>
-        where TRequest: Serialize,
+    fn send_request<TRequest, TResult, TMappedResult>(&self, request: &TRequest, result_map: fn(TResult) -> Result<TMappedResult, UnexpectedResponse>) -> impl Future<Item=TMappedResult, Error=Error>
+        where TRequest: Serialize + ::requests::Request,
               TResult: DeserializeOwned,
     {
-        let uri = format!("{}{}/{}", BASE_API_URI, self.token, method);
+        let uri = format!("{}{}/{}", BASE_API_URI, self.token, request.method());
         let request =
             Request::post(uri)
                 .header("content-type", "application/json")

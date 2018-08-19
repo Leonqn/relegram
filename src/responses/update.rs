@@ -3,6 +3,9 @@ use std::convert::TryFrom;
 use error::*;
 use super::raw;
 
+pub use super::raw::queries::{InlineQuery, ChosenInlineResult, ShippingQuery, PreCheckoutQuery};
+use responses::queries::CallbackQuery;
+
 #[derive(Clone, Debug)]
 pub struct Update {
     pub id: i64,
@@ -13,6 +16,11 @@ pub struct Update {
 pub enum UpdateKind {
     Message(Message),
     EditedMessage(Message),
+    InlineQuery(InlineQuery),
+    ChosenInlineResult(ChosenInlineResult),
+    CallbackQuery(CallbackQuery),
+    ShippingQuery(ShippingQuery),
+    PreCheckoutQuery(PreCheckoutQuery)
 }
 
 impl TryFrom<raw::update::Update> for Update {
