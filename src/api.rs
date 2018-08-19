@@ -3,7 +3,6 @@ use hyper::Client;
 use hyper_tls::HttpsConnector;
 use hyper::client::HttpConnector;
 use hyper::Body;
-use requests::*;
 use error::*;
 use hyper::rt::{Future, Stream};
 use serde::Serialize;
@@ -18,8 +17,10 @@ use stream::UpdatesStream;
 use std::collections::VecDeque;
 use std::time::Duration;
 use responses::message::Message;
-use requests::get::GetUpdatesRequest;
-use requests::send::SendMessageRequest;
+use requests::get_updates::GetUpdatesRequest;
+use requests::send_message::SendMessageRequest;
+use responses::user::User;
+use requests::get_me::GetMe;
 
 const BASE_API_URI: &'static str = "https://api.telegram.org/bot";
 
@@ -32,7 +33,7 @@ impl Clone for BotApiClient {
     fn clone(&self) -> Self {
         BotApiClient {
             http_client: Arc::clone(&self.http_client),
-            token: Arc::clone(&self.token)
+            token: Arc::clone(&self.token),
         }
     }
 }
@@ -69,7 +70,8 @@ impl BotApiClient {
         let first_request = cloned_self.get_updates(&request, timeout);
         let send_request = move |x| {
             request.offset = Some(x);
-            cloned_self.get_updates(&request, timeout) };
+            cloned_self.get_updates(&request, timeout)
+        };
         UpdatesStream {
             bot_api_client: send_request,
             buffer: VecDeque::new(),
@@ -77,8 +79,12 @@ impl BotApiClient {
         }
     }
 
-    pub fn send(&self, request: &SendMessageRequest, timeout: Duration) -> impl Future<Item=Message, Error= Error> {
-        self.send_request(request, <Message as TryFrom<raw::message::Message>>::try_from)
+    pub fn send_message(&self, request: &SendMessageRequest, timeout: Duration) -> impl Future<Item=Message, Error=Error> {
+        self.send_request(request, <Message as TryFrom<raw::message::Message>>::try_from, timeout)
+    }
+
+    pub fn get_me(&self, timeout: Duration) -> impl Future<Item=User, Error=Error> {
+        self.send_request(&GetMe, Ok, timeout)
     }
 
     pub fn get_updates(&self, request: &GetUpdatesRequest, timeout: Duration) -> impl Future<Item=Vec<Update>, Error=Error> {
@@ -88,10 +94,10 @@ impl BotApiClient {
                 .collect::<Result<Vec<Update>, UnexpectedResponse>>()
         }
 
-        self.send_request(request, map)
+        self.send_request(request, map, timeout)
     }
 
-    fn send_request<TRequest, TResult, TMappedResult>(&self, request: &TRequest, result_map: fn(TResult) -> Result<TMappedResult, UnexpectedResponse>) -> impl Future<Item=TMappedResult, Error=Error>
+    fn send_request<TRequest, TResult, TMappedResult>(&self, request: &TRequest, result_map: fn(TResult) -> Result<TMappedResult, UnexpectedResponse>, timeout: Duration) -> impl Future<Item=TMappedResult, Error=Error>
         where TRequest: Serialize + ::requests::Request,
               TResult: DeserializeOwned,
     {
