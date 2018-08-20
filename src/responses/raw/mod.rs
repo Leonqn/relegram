@@ -5,6 +5,7 @@ pub mod update;
 pub mod queries;
 pub mod shipping_address;
 pub mod order_info;
+pub mod file;
 
 #[derive(Deserialize, Debug)]
 pub struct TgResponse<T> {

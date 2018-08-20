@@ -61,9 +61,9 @@ impl fmt::Display for Error {
             Error::UnexpectedResponse { raw_response, kind } =>
                 match kind {
                     UnexpectedResponse::ConvertError(s) =>
-                        write!(f, "Convert from raw data to data model. {}. See raw_response", s),
+                        write!(f, "Convert from raw data to data model. {}. See raw_response:  {}", s, raw_response),
                     UnexpectedResponse::Unsupported =>
-                        write!(f, "Unsupported response. See raw_response "),
+                        write!(f, "Unsupported response. See raw_response: {}", raw_response),
                 }
 
             Error::UnknownError(s) =>

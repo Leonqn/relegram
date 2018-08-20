@@ -21,8 +21,12 @@ use requests::get_updates::GetUpdatesRequest;
 use requests::send_message::SendMessageRequest;
 use responses::user::User;
 use requests::get_me::GetMe;
+use requests::send_media_group::SendMediaGroupRequest;
+use responses::file::File;
+use requests::get_file::GetFileRequest;
 
 const BASE_API_URI: &'static str = "https://api.telegram.org/bot";
+const GET_FILE_URI: &'static str = "https://api.telegram.org/file/bot";
 
 pub struct BotApiClient {
     http_client: Arc<Client<HttpsConnector<HttpConnector>, Body>>,
@@ -79,12 +83,48 @@ impl BotApiClient {
         }
     }
 
+    pub fn download_file(&self, request: &GetFileRequest, timeout: Duration) -> impl Future<Item=Vec<u8>, Error=Error> {
+        let cloned_self = self.clone();
+
+        self.get_file(request, timeout)
+            .then(|file| {
+                match file? {
+                    File { file_path: Some(path), .. } =>
+                        Ok(path),
+                    _ =>
+                        Err(Error::UnknownError(String::from("File not found")))
+                }
+            })
+            .and_then(move |file_path| {
+                let uri = format!("{}{}/{}", GET_FILE_URI, cloned_self.token, file_path).parse().expect("Error has occurred while creating get_file uri");
+                cloned_self.http_client.get(uri)
+                    .and_then(|response| {
+                        response
+                            .into_body()
+                            .concat2()
+                    })
+                    .map(|x| x.to_vec())
+                    .map_err(From::from)
+            })
+    }
+
     pub fn send_message(&self, request: &SendMessageRequest, timeout: Duration) -> impl Future<Item=Message, Error=Error> {
         self.send_request(request, <Message as TryFrom<raw::message::Message>>::try_from, timeout)
     }
 
+    pub fn send_media_group(&self, request: &SendMediaGroupRequest, timeout: Duration) -> impl Future<Item=Vec<Message>, Error=Error> {
+        fn map(x: Vec<raw::message::Message>) -> Result<Vec<Message>, UnexpectedResponse> {
+            x.into_iter().map(TryFrom::try_from).collect()
+        }
+        self.send_request(request, map, timeout)
+    }
+
     pub fn get_me(&self, timeout: Duration) -> impl Future<Item=User, Error=Error> {
         self.send_request(&GetMe, Ok, timeout)
+    }
+
+    pub fn get_file(&self, request: &GetFileRequest, timeout: Duration) -> impl Future<Item=File, Error=Error> {
+        self.send_request(request, Ok, timeout)
     }
 
     pub fn get_updates(&self, request: &GetUpdatesRequest, timeout: Duration) -> impl Future<Item=Vec<Update>, Error=Error> {

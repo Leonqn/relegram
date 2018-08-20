@@ -5,3 +5,4 @@ pub mod user;
 pub(crate) mod raw;
 pub mod update;
 pub mod queries;
+pub mod file;
