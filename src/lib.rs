@@ -8,6 +8,7 @@ extern crate serde_json;
 extern crate serde_derive;
 extern crate chrono;
 extern crate futures;
+extern crate tokio;
 
 pub mod requests;
 pub mod error;

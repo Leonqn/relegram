@@ -118,10 +118,6 @@ pub enum MessageKind {
     PassportData { passport_data: PassportData },
 }
 
-#[derive(Clone, Debug)]
-pub enum ServiceMessage {}
-
-
 impl TryFrom<raw::message::Message> for Message {
     type Error = UnexpectedResponse;
 

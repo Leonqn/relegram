@@ -6,6 +6,8 @@ pub mod chat_id;
 pub mod send_media_group;
 pub mod input_media;
 pub mod get_file;
+pub mod reply_markup;
+
 pub(crate) trait Request {
     fn method(&self) -> &'static str;
 }

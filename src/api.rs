@@ -24,6 +24,8 @@ use requests::get_me::GetMe;
 use requests::send_media_group::SendMediaGroupRequest;
 use responses::file::File;
 use requests::get_file::GetFileRequest;
+use std::time::Instant;
+use tokio::timer::Delay;
 
 const BASE_API_URI: &'static str = "https://api.telegram.org/bot";
 const GET_FILE_URI: &'static str = "https://api.telegram.org/file/bot";
@@ -85,27 +87,28 @@ impl BotApiClient {
 
     pub fn download_file(&self, request: &GetFileRequest, timeout: Duration) -> impl Future<Item=Vec<u8>, Error=Error> {
         let cloned_self = self.clone();
-
-        self.get_file(request, timeout)
-            .then(|file| {
-                match file? {
-                    File { file_path: Some(path), .. } =>
-                        Ok(path),
-                    _ =>
-                        Err(Error::UnknownError(String::from("File not found")))
-                }
-            })
-            .and_then(move |file_path| {
-                let uri = format!("{}{}/{}", GET_FILE_URI, cloned_self.token, file_path).parse().expect("Error has occurred while creating get_file uri");
-                cloned_self.http_client.get(uri)
-                    .and_then(|response| {
-                        response
-                            .into_body()
-                            .concat2()
-                    })
-                    .map(|x| x.to_vec())
-                    .map_err(From::from)
-            })
+        let download_future =
+            self.get_file(request, timeout)
+                .then(|file| {
+                    match file? {
+                        File { file_path: Some(path), .. } =>
+                            Ok(path),
+                        _ =>
+                            Err(Error::UnknownError(String::from("File not found")))
+                    }
+                })
+                .and_then(move |file_path| {
+                    let uri = format!("{}{}/{}", GET_FILE_URI, cloned_self.token, file_path).parse().expect("Error has occurred while creating get_file uri");
+                    cloned_self.http_client.get(uri)
+                        .and_then(|response| {
+                            response
+                                .into_body()
+                                .concat2()
+                        })
+                        .map(|x| x.to_vec())
+                        .map_err(From::from)
+                });
+        BotApiClient::with_timeout(download_future, timeout)
     }
 
     pub fn send_message(&self, request: &SendMessageRequest, timeout: Duration) -> impl Future<Item=Message, Error=Error> {
@@ -149,7 +152,7 @@ impl BotApiClient {
                 .expect("While creating request an error has occurred");
 
 
-        self.http_client.request(request)
+        let api_request = self.http_client.request(request)
             .and_then(|r| r.into_body().concat2())
             .then(move |body| {
                 let body_ref = &body?;
@@ -170,6 +173,28 @@ impl BotApiClient {
                             .map(|x| Error::UnknownError(String::from(x)))
                             .unwrap_or(Error::UnknownError(String::from("Error while converting tg response to utf8 string"))))
                 }
-            })
+            });
+        BotApiClient::with_timeout(api_request, timeout)
+    }
+
+    fn with_timeout<T>(fut: impl Future<Item=T, Error=Error>, timeout: Duration) -> impl Future<Item=T, Error=Error> {
+        let when = Instant::now() + timeout;
+        let delay = Delay::new(when)
+            .then(move |x| {
+                match x {
+                    Ok(_) =>
+                        Err(Error::TimedOut(timeout)),
+                    Err(e) =>
+                        Err(From::from(e))
+                }
+            });
+        fut.select(delay).then(|x| {
+            match x {
+                Ok((resp, _)) =>
+                    Ok(resp),
+                Err((err, _)) =>
+                    Err(err)
+            }
+        })
     }
 }

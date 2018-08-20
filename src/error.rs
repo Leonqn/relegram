@@ -2,10 +2,14 @@ use hyper;
 use serde_json;
 use std::fmt;
 use std::error;
+use tokio;
+use std::time::Duration;
 
 #[derive(Debug)]
 pub enum Error {
     Hyper(hyper::Error),
+    TokioTimer(tokio::timer::Error),
+    TimedOut(Duration),
     Serde(serde_json::Error),
     TelegramApi { error_code: i32, description: String },
     UnexpectedResponse { raw_response: String, kind: UnexpectedResponse },
@@ -17,6 +21,12 @@ pub enum Error {
 pub enum UnexpectedResponse {
     ConvertError(String),
     Unsupported,
+}
+
+impl From<tokio::timer::Error> for Error {
+    fn from(err: tokio::timer::Error) -> Self {
+        Error::TokioTimer(err)
+    }
 }
 
 impl From<hyper::Error> for Error {
@@ -50,10 +60,13 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Error::Hyper(hyper) =>
-                write!(f, "Hyper error has occured: {}", hyper),
-
+                write!(f, "Hyper error has occurred: {}", hyper),
+            Error::TokioTimer(tokio) =>
+                write!(f, "Tokio timer error has occurred: {}", tokio),
+            Error::TimedOut(timeout) =>
+                write!(f, "Request timed out. Provided budget: {} seconds", timeout.as_secs()),
             Error::Serde(serde) =>
-                write!(f, "Serde error has occured: {}", serde),
+                write!(f, "Serde error has occurred: {}", serde),
 
             Error::TelegramApi { error_code, description } =>
                 write!(f, "Error response from telegram bot api: error_code: {}, description: {}", error_code, description),
@@ -67,7 +80,7 @@ impl fmt::Display for Error {
                 }
 
             Error::UnknownError(s) =>
-                write!(f, "Unknown error has occured: {}", s)
+                write!(f, "Unknown error has occurred: {}", s)
         }
     }
 }

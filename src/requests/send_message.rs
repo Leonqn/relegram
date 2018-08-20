@@ -1,20 +1,17 @@
 use std::ops::Not;
 use requests::Request;
 use requests::chat_id::ChatId;
+use requests::reply_markup::ReplyMarkup;
 
 #[derive(Serialize, Debug, Clone)]
 pub struct SendMessageRequest {
     pub chat_id: ChatId,
-
     #[serde(flatten)]
     pub kind: SendMessageKind,
-
     #[serde(skip_serializing_if = "Not::not")]
     pub disable_notification: bool,
-
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reply_to_message_id: Option<i64>,
-
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reply_markup: Option<ReplyMarkup>,
 }
@@ -22,18 +19,15 @@ pub struct SendMessageRequest {
 #[derive(Serialize, Debug, Clone)]
 pub struct Text {
     pub text: String,
-
     #[serde(skip_serializing_if = "Option::is_none")]
     pub parse_mode: Option<ParseMode>,
-
     #[serde(skip_serializing_if = "Not::not")]
     pub disable_web_page_preview: bool,
 }
 
-
 #[derive(Serialize, Debug, Clone)]
 pub struct Photo {
-    pub photo: File,
+    pub photo: FileKind,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub caption: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -42,7 +36,7 @@ pub struct Photo {
 
 #[derive(Serialize, Debug, Clone)]
 pub struct Audio {
-    pub audio: File,
+    pub audio: FileKind,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub caption: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -57,7 +51,7 @@ pub struct Audio {
 
 #[derive(Serialize, Debug, Clone)]
 pub struct Document {
-    pub document: File,
+    pub document: FileKind,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub caption: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -66,7 +60,7 @@ pub struct Document {
 
 #[derive(Serialize, Debug, Clone)]
 pub struct Video {
-    pub video: File,
+    pub video: FileKind,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub duration: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -83,7 +77,7 @@ pub struct Video {
 
 #[derive(Serialize, Debug, Clone)]
 pub struct Animation {
-    pub animation: File,
+    pub animation: FileKind,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub duration: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -98,7 +92,7 @@ pub struct Animation {
 
 #[derive(Serialize, Debug, Clone)]
 pub struct Voice {
-    pub voice: File,
+    pub voice: FileKind,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub caption: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -109,7 +103,7 @@ pub struct Voice {
 
 #[derive(Serialize, Debug, Clone)]
 pub struct VideoNote {
-    pub video_note: File,
+    pub video_note: FileKind,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub duration: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -163,7 +157,7 @@ pub enum SendMessageKind {
 
 #[derive(Serialize, Debug, Clone)]
 #[serde(untagged)]
-pub enum File {
+pub enum FileKind {
     FileId(String),
     Url(String),
 }
@@ -172,76 +166,6 @@ pub enum File {
 pub enum ParseMode {
     Html,
     Markdown,
-}
-
-#[derive(Serialize, Debug, Clone)]
-pub struct InlineKeyboard {
-    pub inline_keyboard: Vec<Vec<InlineKeyboardButton>>
-}
-
-#[derive(Serialize, Debug, Clone)]
-pub struct ReplyKeyboardMarkup {
-    pub keyboard: Vec<Vec<KeyboardButton>>,
-    #[serde(skip_serializing_if = "Not::not")]
-    pub resize_keyboard: bool,
-    #[serde(skip_serializing_if = "Not::not")]
-    pub one_time_keyboard: bool,
-    #[serde(skip_serializing_if = "Not::not")]
-    pub selective: bool,
-}
-
-#[derive(Serialize, Debug, Clone)]
-pub struct ReplyKeyboardRemove {
-    #[serde(skip_serializing_if = "Not::not")]
-    pub remove_keyboard: bool,
-    #[serde(skip_serializing_if = "Not::not")]
-    pub selective: bool,
-}
-
-#[derive(Serialize, Debug, Clone)]
-pub struct ForceReply {
-    #[serde(skip_serializing_if = "Not::not")]
-    pub force_reply: bool,
-    #[serde(skip_serializing_if = "Not::not")]
-    pub selective: bool,
-}
-
-#[derive(Serialize, Debug, Clone)]
-#[serde(untagged)]
-pub enum ReplyMarkup {
-    InlineKeyboard(InlineKeyboard),
-    ReplyKeyboardMarkup(ReplyKeyboardMarkup),
-    ReplyKeyboardRemove(ReplyKeyboardRemove),
-    ForceReply(ForceReply),
-}
-
-#[derive(Serialize, Debug, Clone)]
-pub struct InlineKeyboardButton {
-    pub text: String,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub url: Option<String>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub callback_data: Option<String>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub switch_inline_query: Option<String>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub switch_inline_query_current_chat: Option<String>,
-    //    pub callback_game: Option<CallbackGame>
-    #[serde(skip_serializing_if = "Not::not")]
-    pub pay: bool,
-}
-
-#[derive(Serialize, Debug, Clone)]
-pub struct KeyboardButton {
-    pub text: String,
-    #[serde(skip_serializing_if = "Not::not")]
-    pub request_contact: bool,
-    #[serde(skip_serializing_if = "Not::not")]
-    pub request_location: bool,
 }
 
 
@@ -270,17 +194,17 @@ impl Text {
 impl Request for SendMessageRequest {
     fn method(&self) -> &'static str {
         match self.kind {
-            SendMessageKind::Text { .. } => "sendMessage",
-            SendMessageKind::Photo { .. } => "sendPhoto",
-            SendMessageKind::Audio { .. } => "sendAudio",
-            SendMessageKind::Document { .. } => "sendDocument",
-            SendMessageKind::Video { .. } => "sendVideo",
-            SendMessageKind::Animation { .. } => "sendAnimation",
-            SendMessageKind::Voice { .. } => "sendVoice",
-            SendMessageKind::VideoNote { .. } => "sendVideoNote",
-            SendMessageKind::Location { .. } => "sendLocation",
-            SendMessageKind::Venue { .. } => "sendVenue",
-            SendMessageKind::Contact { .. } => "sendContact",
+            SendMessageKind::Text(_) => "sendMessage",
+            SendMessageKind::Photo(_) => "sendPhoto",
+            SendMessageKind::Audio(_) => "sendAudio",
+            SendMessageKind::Document(_) => "sendDocument",
+            SendMessageKind::Video(_) => "sendVideo",
+            SendMessageKind::Animation(_) => "sendAnimation",
+            SendMessageKind::Voice(_) => "sendVoice",
+            SendMessageKind::VideoNote(_) => "sendVideoNote",
+            SendMessageKind::Location(_) => "sendLocation",
+            SendMessageKind::Venue(_) => "sendVenue",
+            SendMessageKind::Contact(_) => "sendContact",
         }
     }
 }
