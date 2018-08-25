@@ -9,7 +9,7 @@ exclude = [
     ".idea/*"
 ]
 description = "wrapper for telegram bot api"
-
+license = "MIT"
 
 [dependencies]
 hyper = "0.12"
