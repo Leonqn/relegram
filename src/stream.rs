@@ -6,7 +6,7 @@ use futures::Async;
 use futures::Stream;
 use std::cmp::max;
 
-pub(crate) struct UpdatesStream<Fut, Sender> {
+pub struct UpdatesStream<Fut, Sender> {
     pub bot_api_client: Sender,
     pub buffer: VecDeque<Update>,
     pub executing_request: Fut,

@@ -17,7 +17,8 @@ use std::collections::VecDeque;
 use std::time::Duration;
 use std::time::Instant;
 use tokio::timer::Delay;
-use TryFrom;
+use try_from::TryFrom;
+use std::cmp::max;
 
 const BASE_API_URI: &'static str = "https://api.telegram.org/bot";
 const GET_FILE_URI: &'static str = "https://api.telegram.org/file/bot";
@@ -63,12 +64,12 @@ impl BotApiClient {
         }
     }
 
-    pub fn incoming_updates(&self, mut request: GetUpdatesRequest, timeout: Duration) -> impl Stream<Item=Update, Error=Error> {
+    pub fn incoming_updates(&self, mut request: GetUpdatesRequest) -> impl Stream<Item=Update, Error=Error> {
         let cloned_self = self.clone();
-        let first_request = cloned_self.get_updates(&request, timeout);
+        let first_request = cloned_self.get_updates(&request);
         let send_request = move |x| {
             request.offset = Some(x);
-            cloned_self.get_updates(&request, timeout)
+            cloned_self.get_updates(&request)
         };
         UpdatesStream {
             bot_api_client: send_request,
@@ -123,12 +124,14 @@ impl BotApiClient {
         self.send_request(request, Ok, timeout)
     }
 
-    pub fn get_updates(&self, request: &GetUpdatesRequest, timeout: Duration) -> impl Future<Item=Vec<Update>, Error=Error> {
+    pub fn get_updates(&self, request: &GetUpdatesRequest) -> impl Future<Item=Vec<Update>, Error=Error> {
         fn map(x: Vec<raw::update::Update>) -> Result<Vec<Update>, UnexpectedResponse> {
             x.into_iter()
                 .map(TryFrom::try_from)
                 .collect::<Result<Vec<Update>, UnexpectedResponse>>()
         }
+
+        let timeout = Duration::from_secs(request.timeout.map(|x| max(x * 2, 10)).unwrap_or(10) as u64);
 
         self.send_request(request, map, timeout)
     }

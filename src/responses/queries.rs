@@ -2,7 +2,7 @@ use responses::user::User;
 use responses::message::Message;
 use super::raw::queries;
 use error::UnexpectedResponse;
-use TryFrom;
+use try_from::TryFrom;
 
 #[derive(Debug, Clone)]
 pub struct CallbackQuery {

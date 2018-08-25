@@ -4,7 +4,7 @@ use super::raw;
 
 pub use super::raw::queries::{InlineQuery, ChosenInlineResult, ShippingQuery, PreCheckoutQuery};
 use responses::queries::CallbackQuery;
-use TryFrom;
+use try_from::TryFrom;
 
 #[derive(Clone, Debug)]
 pub struct Update {

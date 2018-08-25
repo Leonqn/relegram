@@ -8,15 +8,13 @@ extern crate chrono;
 extern crate futures;
 extern crate tokio;
 
+pub use self::api::{HttpClient, BotApiClient};
+
 pub mod requests;
 pub mod error;
-pub mod api;
 pub mod responses;
-pub mod stream;
 
+mod api;
 
-pub(crate) trait TryFrom<T>: Sized {
-    type Error;
-
-    fn try_from(value: T) -> Result<Self, Self::Error>;
-}
+pub(crate) mod try_from;
+pub(crate) mod stream;

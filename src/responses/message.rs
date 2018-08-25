@@ -20,7 +20,7 @@ pub use self::raw::message::{Audio,
                              SuccessfulPayment,
                              PassportData};
 use responses::user::User;
-use TryFrom;
+use try_from::TryFrom;
 
 #[derive(Clone, Debug)]
 pub struct Message {
