@@ -13,7 +13,7 @@ pub enum Error {
     Serde(serde_json::Error),
     TelegramApi { error_code: i32, description: String },
     UnexpectedResponse { raw_response: String, kind: UnexpectedResponse },
-    UnknownError(String),
+    Unknown(String),
 }
 
 
@@ -79,7 +79,7 @@ impl fmt::Display for Error {
                         write!(f, "Unsupported response. See raw_response: {}", raw_response),
                 }
 
-            Error::UnknownError(s) =>
+            Error::Unknown(s) =>
                 write!(f, "Unknown error has occurred: {}", s)
         }
     }

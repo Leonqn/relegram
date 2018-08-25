@@ -87,7 +87,7 @@ impl BotApiClient {
                         File { file_path: Some(path), .. } =>
                             Ok(path),
                         _ =>
-                            Err(Error::UnknownError(String::from("File not found")))
+                            Err(Error::Unknown(String::from("File not found")))
                     }
                 })
                 .and_then(move |file_path| {
@@ -156,15 +156,15 @@ impl BotApiClient {
                             .map_err(|err|
                                 str::from_utf8(body_ref)
                                     .map(|x| Error::UnexpectedResponse { raw_response: String::from(x), kind: err })
-                                    .unwrap_or(Error::UnknownError(String::from("Error while converting tg response to utf8 string")))),
+                                    .unwrap_or(Error::Unknown(String::from("Error while converting tg response to utf8 string")))),
 
                     raw::TgResponse { ok: false, description: Some(description), error_code: Some(error_code), .. } =>
                         Err(Error::TelegramApi { error_code, description }),
 
                     _ =>
                         Err(str::from_utf8(body_ref)
-                            .map(|x| Error::UnknownError(String::from(x)))
-                            .unwrap_or(Error::UnknownError(String::from("Error while converting tg response to utf8 string"))))
+                            .map(|x| Error::Unknown(String::from(x)))
+                            .unwrap_or(Error::Unknown(String::from("Error while converting tg response to utf8 string"))))
                 }
             });
         BotApiClient::with_timeout(api_request, timeout)
