@@ -1,6 +1,6 @@
 [package]
 name = "relegram"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Ilya Titkov <ilya@titkov.me>"]
 maintenance = { status = "experimental" }
 readme = "README.md"
