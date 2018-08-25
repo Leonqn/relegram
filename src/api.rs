@@ -74,6 +74,7 @@ impl BotApiClient {
             bot_api_client: send_request,
             buffer: VecDeque::new(),
             executing_request: first_request,
+            is_canceled: false,
         }
     }
 

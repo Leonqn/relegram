@@ -6,10 +6,11 @@ use futures::Async;
 use futures::Stream;
 use std::cmp::max;
 
-pub struct UpdatesStream<Fut, Sender> {
+pub(crate) struct UpdatesStream<Fut, Sender> {
     pub bot_api_client: Sender,
     pub buffer: VecDeque<Update>,
     pub executing_request: Fut,
+    pub is_canceled: bool,
 }
 
 impl<Fut, Sender> Stream for UpdatesStream<Fut, Sender>
@@ -19,6 +20,9 @@ impl<Fut, Sender> Stream for UpdatesStream<Fut, Sender>
     type Error = Error;
 
     fn poll(&mut self) -> Result<Async<Option<Self::Item>>, Self::Error> {
+        if self.is_canceled {
+            return Ok(Async::Ready(None));
+        }
         if let Some(update) = self.buffer.pop_front() {
             return Ok(Async::Ready(Some(update)));
         }
@@ -39,5 +43,11 @@ impl<Fut, Sender> Stream for UpdatesStream<Fut, Sender>
             Err(err) =>
                 Err(err)
         }
+    }
+}
+
+impl<Fut, Sender> Drop for UpdatesStream<Fut, Sender> {
+    fn drop(&mut self) {
+        self.is_canceled = true;
     }
 }

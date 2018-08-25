@@ -160,6 +160,7 @@ pub enum SendMessageKind {
 pub enum FileKind {
     FileId(String),
     Url(String),
+    InputFile(Vec<u8>)
 }
 
 #[derive(Serialize, Debug, Clone, Copy)]
