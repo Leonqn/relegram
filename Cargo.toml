@@ -4,7 +4,6 @@ version = "0.1.0"
 authors = ["Ilya Titkov <ilya@titkov.me>"]
 maintenance = { status = "experimental" }
 readme = "README.md"
-license-file = "LICENSE"
 repository = "https://github.com/Leonqn/relegram"
 exclude = [
     ".idea/*"
