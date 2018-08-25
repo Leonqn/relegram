@@ -3,7 +3,6 @@ use ::responses::raw;
 use super::chat::*;
 use super::channel::*;
 use error::*;
-use std::convert::TryFrom;
 
 pub use self::raw::message::{Audio,
                              Voice,
@@ -21,6 +20,7 @@ pub use self::raw::message::{Audio,
                              SuccessfulPayment,
                              PassportData};
 use responses::user::User;
+use TryFrom;
 
 #[derive(Clone, Debug)]
 pub struct Message {

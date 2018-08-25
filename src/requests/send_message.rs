@@ -17,7 +17,7 @@ pub struct SendMessageRequest {
 }
 
 #[derive(Serialize, Debug, Clone)]
-pub struct Text {
+pub struct SendText {
     pub text: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub parse_mode: Option<ParseMode>,
@@ -26,7 +26,7 @@ pub struct Text {
 }
 
 #[derive(Serialize, Debug, Clone)]
-pub struct Photo {
+pub struct SendPhoto {
     pub photo: FileKind,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub caption: Option<String>,
@@ -35,7 +35,7 @@ pub struct Photo {
 }
 
 #[derive(Serialize, Debug, Clone)]
-pub struct Audio {
+pub struct SendAudio {
     pub audio: FileKind,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub caption: Option<String>,
@@ -50,7 +50,7 @@ pub struct Audio {
 }
 
 #[derive(Serialize, Debug, Clone)]
-pub struct Document {
+pub struct SendDocument {
     pub document: FileKind,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub caption: Option<String>,
@@ -59,7 +59,7 @@ pub struct Document {
 }
 
 #[derive(Serialize, Debug, Clone)]
-pub struct Video {
+pub struct SendVideo {
     pub video: FileKind,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub duration: Option<i64>,
@@ -76,7 +76,7 @@ pub struct Video {
 }
 
 #[derive(Serialize, Debug, Clone)]
-pub struct Animation {
+pub struct SendAnimation {
     pub animation: FileKind,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub duration: Option<i64>,
@@ -91,7 +91,7 @@ pub struct Animation {
 }
 
 #[derive(Serialize, Debug, Clone)]
-pub struct Voice {
+pub struct SendVoice {
     pub voice: FileKind,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub caption: Option<String>,
@@ -102,7 +102,7 @@ pub struct Voice {
 }
 
 #[derive(Serialize, Debug, Clone)]
-pub struct VideoNote {
+pub struct SendVideoNote {
     pub video_note: FileKind,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub duration: Option<i64>,
@@ -111,7 +111,7 @@ pub struct VideoNote {
 }
 
 #[derive(Serialize, Debug, Clone)]
-pub struct Venue {
+pub struct SendVenue {
     pub latitude: f32,
     pub longitude: f32,
     pub title: String,
@@ -123,7 +123,7 @@ pub struct Venue {
 }
 
 #[derive(Serialize, Debug, Clone)]
-pub struct Location {
+pub struct SendLocation {
     pub latitude: f32,
     pub longitude: f32,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -131,7 +131,7 @@ pub struct Location {
 }
 
 #[derive(Serialize, Debug, Clone)]
-pub struct Contact {
+pub struct SendContact {
     pub phone_number: String,
     pub first_name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -142,17 +142,17 @@ pub struct Contact {
 #[derive(Serialize, Debug, Clone)]
 #[serde(untagged)]
 pub enum SendMessageKind {
-    Text(Text),
-    Photo(Photo),
-    Audio(Audio),
-    Document(Document),
-    Video(Video),
-    Animation(Animation),
-    Voice(Voice),
-    VideoNote(VideoNote),
-    Location(Location),
-    Venue(Venue),
-    Contact(Contact),
+    Text(SendText),
+    Photo(SendPhoto),
+    Audio(SendAudio),
+    Document(SendDocument),
+    Video(SendVideo),
+    Animation(SendAnimation),
+    Voice(SendVoice),
+    VideoNote(SendVideoNote),
+    Location(SendLocation),
+    Venue(SendVenue),
+    Contact(SendContact),
 }
 
 #[derive(Serialize, Debug, Clone)]
@@ -181,12 +181,127 @@ impl SendMessageRequest {
     }
 }
 
-impl Text {
-    pub fn new(text: String) -> Text {
-        Text {
+impl SendText {
+    pub fn new(text: String) -> SendText {
+        SendText {
             text,
             parse_mode: None,
             disable_web_page_preview: false,
+        }
+    }
+}
+
+impl SendPhoto {
+    pub fn new(photo: FileKind) -> SendPhoto {
+        SendPhoto {
+            photo,
+            caption: None,
+            parse_mode: None,
+        }
+    }
+}
+
+impl SendAnimation {
+    pub fn new(animation: FileKind) -> SendAnimation {
+        SendAnimation {
+            animation,
+            duration: None,
+            with: None,
+            height: None,
+            caption: None,
+            parse_mode: None,
+        }
+    }
+}
+
+impl SendAudio {
+    pub fn new(audio: FileKind) -> SendAudio {
+        SendAudio {
+            audio,
+            caption: None,
+            parse_mode: None,
+            duration: None,
+            performer: None,
+            title: None,
+        }
+    }
+}
+
+impl SendContact {
+    pub fn new(phone_number: String, first_name: String) -> SendContact {
+        SendContact {
+            phone_number,
+            first_name,
+            last_name: None,
+            vcard: None,
+        }
+    }
+}
+
+impl SendDocument {
+    pub fn new(document: FileKind) -> SendDocument {
+        SendDocument {
+            document,
+            caption: None,
+            parse_mode: None,
+        }
+    }
+}
+
+impl SendLocation {
+    pub fn new(latitude: f32, longitude: f32) -> SendLocation {
+        SendLocation {
+            latitude,
+            longitude,
+            live_period: None,
+        }
+    }
+}
+
+impl SendVideoNote {
+    pub fn new(video_note: FileKind) -> SendVideoNote {
+        SendVideoNote {
+            video_note,
+            duration: None,
+            length: None,
+        }
+    }
+}
+
+impl SendVenue {
+    pub fn new(latitude: f32, longitude: f32, title: String, address: String) -> SendVenue {
+        SendVenue {
+            latitude,
+            longitude,
+            title,
+            address,
+            foursquare_id: None,
+            foursquare_type: None,
+        }
+    }
+}
+
+impl SendVideo {
+    pub fn new(video: FileKind) -> SendVideo {
+        SendVideo {
+            video,
+            duration: None,
+            with: None,
+            height: None,
+            caption: None,
+            parse_mode: None,
+            supports_streaming: false,
+        }
+    }
+}
+
+impl SendVoice {
+    pub fn new(voice: FileKind) -> SendVoice {
+        SendVoice {
+            voice,
+            caption: None,
+            parse_mode: None,
+            duration: None,
         }
     }
 }

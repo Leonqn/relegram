@@ -1,6 +1,6 @@
 use super::raw::chat;
-use std::convert::TryFrom;
 use error::UnexpectedResponse;
+use TryFrom;
 
 #[derive(Clone, Debug)]
 pub struct Chat {

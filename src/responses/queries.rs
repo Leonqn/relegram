@@ -1,8 +1,8 @@
 use responses::user::User;
 use responses::message::Message;
-use std::convert::TryFrom;
 use super::raw::queries;
 use error::UnexpectedResponse;
+use TryFrom;
 
 #[derive(Debug, Clone)]
 pub struct CallbackQuery {

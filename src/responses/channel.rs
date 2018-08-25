@@ -1,6 +1,6 @@
 use responses::raw::chat::Chat;
 use error::UnexpectedResponse;
-use std::convert::TryFrom;
+use TryFrom;
 
 #[derive(Clone, Debug)]
 pub struct Channel {

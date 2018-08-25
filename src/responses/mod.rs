@@ -1,8 +1,17 @@
-pub mod message;
-pub mod chat;
-pub mod channel;
-pub mod user;
+pub use self::message::*;
+pub use self::chat::*;
+pub use self::channel::*;
+pub use self::user::*;
+pub use self::update::*;
+pub use self::queries::*;
+pub use self::file::*;
+
+mod message;
+mod chat;
+mod channel;
+mod user;
 pub(crate) mod raw;
-pub mod update;
-pub mod queries;
-pub mod file;
+mod update;
+mod queries;
+mod file;
+

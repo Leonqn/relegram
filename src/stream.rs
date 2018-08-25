@@ -1,4 +1,4 @@
-use responses::update::Update;
+use responses::Update;
 use error::Error;
 use std::collections::VecDeque;
 use futures::Future;
