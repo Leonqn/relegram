@@ -9,6 +9,9 @@ repository = "https://github.com/Leonqn/relegram"
 exclude = [
     ".idea/*"
 ]
+description = "wrapper for telegram bot api"
+
+
 [dependencies]
 hyper = "0.12"
 hyper-tls = "0.3"
