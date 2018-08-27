@@ -88,7 +88,7 @@ pub struct Animation {
     pub thumb: Option<PhotoSize>,
     pub file_name: Option<String>,
     pub mime_type: Option<String>,
-    pub file_size: Option<String>,
+    pub file_size: Option<i64>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -162,7 +162,7 @@ pub struct VideoNote {
     pub length: i64,
     pub duration: i64,
     pub thumb: Option<PhotoSize>,
-    pub file_size: Option<String>,
+    pub file_size: Option<i64>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
