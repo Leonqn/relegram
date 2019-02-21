@@ -8,6 +8,7 @@ pub use self::input_media::*;
 pub use self::get_file::*;
 pub use self::reply_markup::*;
 pub use self::answer_callback_query::*;
+pub use self::chat_action::*;
 
 mod send_message;
 mod get_updates;
@@ -19,7 +20,7 @@ mod input_media;
 mod get_file;
 mod reply_markup;
 mod answer_callback_query;
-
+mod chat_action;
 pub(crate) trait Request {
     fn method(&self) -> &'static str;
 }

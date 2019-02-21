@@ -112,6 +112,13 @@ impl BotApiClient {
         self.send_request(request, <Message as TryFrom<raw::message::Message>>::try_from, timeout)
     }
 
+    pub fn send_chat_action(&self, request: &SendChatAction, timeout: Duration) -> impl Future<Item=bool, Error=Error> {
+        fn id(val: bool) -> Result<bool, UnexpectedResponse> {
+            Ok(val)
+        }
+        self.send_request(request, id, timeout)
+    }
+
     pub fn answer_callback_query(&self, request: &AnswerCallbackQuery, timeout: Duration) -> impl Future<Item=bool, Error=Error> {
         fn id(val: bool) -> Result<bool, UnexpectedResponse> {
             Ok(val)
