@@ -44,7 +44,7 @@ pub enum HttpClient {
 }
 
 impl BotApiClient {
-    pub fn new(http_client: HttpClient, token: String) -> BotApiClient {
+    pub fn new<S: Into<String>>(http_client: HttpClient, token: S) -> BotApiClient {
         let http_client =
             match http_client {
                 HttpClient::Default => {
@@ -60,7 +60,7 @@ impl BotApiClient {
             };
         BotApiClient {
             http_client,
-            token: Arc::new(token),
+            token: Arc::new(token.into()),
         }
     }
 
@@ -107,6 +107,13 @@ impl BotApiClient {
 
     pub fn send_message(&self, request: &SendMessageRequest, timeout: Duration) -> impl Future<Item=Message, Error=Error> {
         self.send_request(request, <Message as TryFrom<raw::message::Message>>::try_from, timeout)
+    }
+
+    pub fn answer_callback_query(&self, request: &AnswerCallbackQuery, timeout: Duration) -> impl Future<Item=bool, Error=Error> {
+        fn id(val: bool) -> Result<bool, UnexpectedResponse> {
+            Ok(val)
+        }
+        self.send_request(request, id, timeout)
     }
 
     pub fn send_media_group(&self, request: &SendMediaGroupRequest, timeout: Duration) -> impl Future<Item=Vec<Message>, Error=Error> {
