@@ -37,8 +37,9 @@ impl<Fut, Sender> Stream for UpdatesStream<Fut, Sender>
                 Ok(Async::NotReady),
 
             Ok(Async::Ready(updates)) => {
+                let last_id = self.last_id.unwrap_or(-1);
                 for update in updates {
-                    self.last_id = self.last_id.map(|x| max(update.id, x));
+                    self.last_id = Some(max(update.id, last_id));
                     self.buffer.push_back(update)
                 }
                 self.executing_request = (self.bot_api_client)(self.last_id);
