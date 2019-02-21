@@ -67,8 +67,9 @@ impl BotApiClient {
     pub fn incoming_updates(&self, mut request: GetUpdatesRequest) -> impl Stream<Item=Update, Error=Error> {
         let cloned_self = self.clone();
         let first_request = cloned_self.get_updates(&request);
+        let offset = request.offset;
         let send_request = move |x| {
-            request.offset = Some(x);
+            request.offset = x;
             cloned_self.get_updates(&request)
         };
         UpdatesStream {
@@ -76,6 +77,8 @@ impl BotApiClient {
             buffer: VecDeque::new(),
             executing_request: first_request,
             is_canceled: false,
+            last_id: offset,
+            has_error: false
         }
     }
 
