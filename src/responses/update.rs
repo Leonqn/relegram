@@ -20,7 +20,7 @@ pub enum UpdateKind {
     ChosenInlineResult(ChosenInlineResult),
     CallbackQuery(CallbackQuery),
     ShippingQuery(ShippingQuery),
-    PreCheckoutQuery(PreCheckoutQuery)
+    PreCheckoutQuery(PreCheckoutQuery),
 }
 
 impl TryFrom<raw::update::Update> for Update {
@@ -41,6 +41,9 @@ impl TryFrom<raw::update::Update> for Update {
 
                 raw::update::Update { edited_channel_post: Some(post), .. } =>
                     TryFrom::try_from(post).map(UpdateKind::Message),
+
+                raw::update::Update { callback_query: Some(query), .. } =>
+                    TryFrom::try_from(query).map(UpdateKind::CallbackQuery),
 
                 _ =>
                     Err(UnexpectedResponse::Unsupported)
