@@ -203,7 +203,8 @@ impl TryFrom<raw::message::Message> for Message {
             ) -> Result<MessageKind, UnexpectedResponse> {
                 fn into_entities(text: &str, entities: Option<Vec<raw::message::MessageEntity>>) -> Option<Vec<MessageEntity>> {
                     entities.map(|entities| entities.into_iter().map(|entity| {
-                        let captured = String::from(&text[(entity.offset as usize)..(entity.offset as usize + entity.length as usize)]);
+                        let utf16_capture: Vec<u16> = text.encode_utf16().skip(entity.offset as usize).take(entity.offset as usize + entity.length as usize).collect();
+                        let captured = String::from_utf16_lossy(&utf16_capture);
                         match entity.typ.as_ref() {
                             "mention" =>
                                 MessageEntity::Mention(captured),
