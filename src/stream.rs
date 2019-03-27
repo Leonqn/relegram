@@ -1,10 +1,13 @@
-use responses::Update;
-use error::Error;
-use std::collections::VecDeque;
-use futures::Future;
-use futures::Async;
-use futures::Stream;
 use std::cmp::max;
+use std::collections::VecDeque;
+
+use futures::Async;
+use futures::Future;
+use futures::Stream;
+
+use error::Error;
+use responses::Update;
+use std::i64;
 
 pub struct UpdatesStream<Fut, Sender> {
     pub bot_api_client: Sender,
@@ -46,6 +49,10 @@ impl<Fut, Sender> Stream for UpdatesStream<Fut, Sender>
                 self.poll()
             }
             Err(err) => {
+//                match err {
+//                    Error::UnexpectedResponse { .. } => self.last_id = Some(self.last_id.map(|x| x + 1).unwrap_or(-2)),
+//                    _ => {}
+//                }
                 self.has_error = true;
                 Err(err)
             }

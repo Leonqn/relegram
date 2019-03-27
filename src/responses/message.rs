@@ -1,26 +1,28 @@
 use chrono::prelude::*;
-use ::responses::raw;
-use super::chat::*;
-use super::channel::*;
-use error::*;
 
-pub use self::raw::message::{Audio,
-                             Voice,
-                             Document,
-                             Animation,
-                             Game,
-                             PhotoSize,
-                             Sticker,
-                             Video,
-                             VideoNote,
-                             Contact,
-                             Location,
-                             Venue,
-                             Invoice,
-                             SuccessfulPayment,
-                             PassportData};
+use ::responses::raw;
+use error::*;
 use responses::user::User;
 use try_from::TryFrom;
+
+use super::channel::*;
+use super::chat::*;
+
+pub use self::raw::message::{Animation,
+                             Audio,
+                             Contact,
+                             Document,
+                             Game,
+                             Invoice,
+                             Location,
+                             PassportData,
+                             PhotoSize,
+                             Sticker,
+                             SuccessfulPayment,
+                             Venue,
+                             Video,
+                             VideoNote,
+                             Voice};
 
 #[derive(Clone, Debug)]
 pub struct Message {
@@ -55,6 +57,9 @@ pub struct Forward {
 #[derive(Clone, Debug)]
 pub enum ForwardFrom {
     User(User),
+    HiddenUser {
+        signature: String
+    },
     Channel {
         channel: Channel,
         original_message_id: i64,
@@ -139,6 +144,13 @@ impl TryFrom<raw::message::Message> for Message {
                                     original_signature: sign,
                                 },
                             })),
+                    (None, Some(_), None, Some(sign), Some(date)) =>
+                        Ok(Some(Forward {
+                            original_date: Utc.timestamp(date as i64, 0),
+                            from: ForwardFrom::HiddenUser {
+                                signature: sign,
+                            },
+                        })),
                     (Some(user), None, None, None, Some(date)) =>
                         Ok(Some(Forward {
                             original_date: Utc.timestamp(date as i64, 0),
